@@ -1,3 +1,5 @@
+# Sample CAP application to deploy to Kyma runtime
+
 # Getting Started
 
 Welcome to your new project.

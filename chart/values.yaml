@@ -1,0 +1,92 @@
+global:
+  domain: c-2d8ceba.kyma.ondemand.com
+  imagePullSecret:
+    {}
+srv:
+  bindings:
+    db:
+      fromSecret: cpapp-db
+    auth:
+      serviceInstanceName: xsuaa
+  image:
+    repository: docker.io/muralov/cpapp-srv
+    tag: latest
+  resources:
+    limits:
+      ephemeral-storage: 1G
+      memory: 500M
+    requests:
+      ephemeral-storage: 1G
+      cpu: 500m
+      memory: 500M
+  health:
+    liveness:
+      path: /
+    readiness:
+      path: /
+hana-deployer:
+  image:
+    repository: docker.io/muralov/cpapp-hana-deployer
+    tag: latest
+  bindings:
+    hana:
+      fromSecret: cpapp-db
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 1G
+    requests:
+      cpu: 1000m
+      memory: 1G
+hana:
+  serviceOfferingName: hana
+  servicePlanName: hdi-shared
+xsuaa:
+  serviceOfferingName: xsuaa
+  servicePlanName: application
+  parameters:
+    xsappname: cpapp
+    tenant-mode: dedicated
+    role-collections:
+      - description: Manage Risks
+        name: RiskManager
+        role-template-references:
+          - '$XSAPPNAME.RiskManager'
+      - description: View Risks
+        name: RiskViewer
+        role-template-references:
+          - '$XSAPPNAME.RiskViewer'
+html5-apps-repo-host:
+  serviceOfferingName: html5-apps-repo
+  servicePlanName: app-host
+html5-apps-deployer:
+  env:
+    SAP_CLOUD_SERVICE: cpapp.service
+  envFrom:
+    - configMapRef:
+        name: "{{ .Release.Name }}-html5-apps-deployer-configmap"
+  image:
+    repository: docker.io/muralov/cpapp-html5-deployer
+    tag: latest
+  bindings:
+    xsuaa:
+      serviceInstanceName: xsuaa
+    destination:
+      serviceInstanceName: destination
+    html5-apps-repo:
+      serviceInstanceName: html5-apps-repo-host
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 1G
+    requests:
+      cpu: 1000m
+      memory: 1G
+backendDestinations:
+  {}
+destination:
+  serviceOfferingName: destination
+  servicePlanName: lite
+  parameters:
+    version: 1.0.0
+    HTML5Runtime_enabled: true
